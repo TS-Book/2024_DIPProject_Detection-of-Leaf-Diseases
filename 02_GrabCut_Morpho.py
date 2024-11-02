@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import os
 
-# กำหนดเส้นทางของไฟล์ภาพสำหรับแต่ละ Class
+# Define paths for each class
 class_paths = {
     "Normal Leaf": {
         "input": r'D:\University\3\3_1\DIP\Mini project\Plant_Disease_Detection\Data\1_1_Augmentation\01_Normal',
@@ -22,80 +22,64 @@ class_paths = {
     }
 }
 
-# นามสกุลไฟล์ที่ต้องการตรวจสอบ
+# File extensions to check
 extensions = ['.jpg', '.jpeg', '.png', '.JPG', '.JPEG', '.PNG']
 
-# วนลูปประมวลผลแต่ละ Class
+# Loop over each class
 for class_name, paths in class_paths.items():
     os.makedirs(paths['output'], exist_ok=True)
 
-    for i in range(1, 401):  # 001-400
-        # ใช้ zfill เพื่อให้หมายเลขไฟล์มีสามหลัก
+    for i in range(1, 1000):  # 001-1000
+        # Generate the base filename with 4 digits
+        base_filename = ""
         if class_name == "Normal Leaf":
-            base_filename = f"01_Normal_{str(i).zfill(3)}"
+            base_filename = f"01_Normal_{str(i).zfill(4)}"
         elif class_name == "Leaf Spot":
-            base_filename = f"02_Leaf_spot_{str(i).zfill(3)}"
+            base_filename = f"02_Leaf_spot_{str(i).zfill(4)}"
         elif class_name == "Mosaic Virus":
-            base_filename = f"03_Mosaic_Virus_{str(i).zfill(3)}"
+            base_filename = f"03_Mosaic_Virus_{str(i).zfill(4)}"
         elif class_name == "Powdery Mildew":
-            base_filename = f"04_Powdery_Mildew_{str(i).zfill(3)}"
+            base_filename = f"04_Powdery_Mildew_{str(i).zfill(4)}"
 
-        # ตรวจสอบทุกนามสกุล
+        # Check each extension
         loaded = False
         for ext in extensions:
             image_filename = f"{base_filename}{ext}"
             image_path = os.path.join(paths['input'], image_filename)
 
-            # โหลดภาพ
+            # Try loading the image
+            print(f"Attempting to load image: {image_path}")  # Debug print
             image = cv2.imread(image_path)
             if image is not None:
                 loaded = True
                 print(f"Successfully loaded image: {image_path}")
 
-                # ปรับขนาดภาพก่อนการประมวลผล
+                # Resize and pre-process
                 image = cv2.resize(image, (256, 256))
 
-                # ปรับปรุงก่อนการประมวลผล
-                image = cv2.GaussianBlur(image, (5, 5), 0)  # ใช้ Gaussian Blur เพื่อลด Noise
-
-                # แปลงสีภาพเป็น HSV
-                hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-
-                # ปรับความสว่างและความคอนทราสต์
-                image_eq = cv2.equalizeHist(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY))
-
-                # การ Thresholding
-                _, thresh = cv2.threshold(image_eq, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-
-                # ใช้ Morphological Operations เพื่อทำความสะอาดภาพ
-                kernel = np.ones((5, 5), np.uint8)
-                morph = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
-
-                # ใช้ GrabCut
-                height, width = image.shape[:2]
-                rect = (5, 5, width - 10, height - 10)  # ปรับตำแหน่งตามความเหมาะสม
-                
-                # เตรียม mask และตัวแปรสำหรับ GrabCut
+                # Prepare mask with GrabCut
                 mask = np.zeros(image.shape[:2], np.uint8)
                 bgd_model = np.zeros((1, 65), np.float64)
                 fgd_model = np.zeros((1, 65), np.float64)
+                rect = (5, 5, image.shape[1] - 10, image.shape[0] - 10)
+                cv2.grabCut(image, mask, rect, bgd_model, fgd_model, 5, cv2.GC_INIT_WITH_RECT)
 
-                # ใช้ GrabCut
-                iterations = 10  # เพิ่มจำนวน iterations
-                cv2.grabCut(image, mask, rect, bgd_model, fgd_model, iterations, cv2.GC_INIT_WITH_RECT)
+                # Refine the mask
+                mask = np.where((mask == 2) | (mask == 0), 0, 1).astype('uint8')
+                kernel = np.ones((5, 5), np.uint8)
+                mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
 
-                # แปลง mask
-                mask2 = np.where((mask == 2) | (mask == 0), 0, 1).astype('uint8')
+                # Apply mask and create an RGBA image
+                segmented_image = image * mask[:, :, np.newaxis]
+                rgba_image = cv2.cvtColor(segmented_image, cv2.COLOR_BGR2BGRA)
+                rgba_image[:, :, 3] = mask * 255  # Set alpha channel based on mask
 
-                # ใช้ Morphological Operations เพื่อปิดรูที่อยู่ในวัตถุ
-                mask2 = cv2.morphologyEx(mask2, cv2.MORPH_CLOSE, kernel)
+                # Save processed image
+                output_file = os.path.join(paths['output'], f"{base_filename}.png")
+                cv2.imwrite(output_file, rgba_image)
+                print(f"Saved processed image to: {output_file}")
 
-                # เซฟภาพที่ประมวลผล
-                segmented_image = image * mask2[:, :, np.newaxis]
-                output_file = os.path.join(paths['output'], os.path.basename(image_path))  # ตั้งชื่อไฟล์ตามต้นฉบับ
-                cv2.imwrite(output_file, segmented_image)
-
-                break  # หยุดตรวจสอบนามสกุลเมื่อโหลดไฟล์สำเร็จ
+                break  # Stop once the image is loaded and processed
         
         if not loaded:
             print(f"Error loading image for base filename: {base_filename}")
