@@ -68,6 +68,6 @@ for input_folder, output_folder in folders:
             new_filename = f"{os.path.basename(output_folder)}_{str(current_image_count).zfill(3)}.jpg"
             cv2.imwrite(os.path.join(output_folder, new_filename), augmented_image)
 
-    print(f"Data Augmentation เสร็จสิ้นสำหรับ '{os.path.basename(input_folder)}' มีรูปภาพทั้งหมด 400 รูปในโฟลเดอร์:", output_folder)
+    print(f"Data Augmentation เสร็จสิ้นสำหรับ '{os.path.basename(input_folder)}' มีรูปภาพทั้งหมด 1000 รูปในโฟลเดอร์:", output_folder)
 
 print("Data Augmentation เสร็จสิ้นทั้งหมด")
