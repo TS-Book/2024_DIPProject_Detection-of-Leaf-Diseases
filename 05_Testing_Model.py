@@ -14,34 +14,56 @@ test_folders = [
 output_folder = r'D:\University\3\3_1\DIP\Mini project\Plant_Disease_Detection\Data\6_TestAll'
 os.makedirs(output_folder, exist_ok=True)
 
-# Step 1: Rename images
+# Step 1: Rename images and save as PNG
 counter = 0
 for folder in test_folders:
     for filename in os.listdir(folder):
         if filename.lower().endswith(('.jpg', '.jpeg', '.png')):
             src = os.path.join(folder, filename)
-            dst = os.path.join(output_folder, f"{counter}.jpg")
+            dst = os.path.join(output_folder, f"{counter}.png")  # Change to .png
             cv2.imwrite(dst, cv2.imread(src))
             counter += 1
 
-# Step 2: Image segmentation and resizing
+# Step 2: Image segmentation, resizing, and background removal
 def segment_and_resize_image(image):
+    # Resize image for consistent processing
     image_resized = cv2.resize(image, (256, 256))
     height, width = image_resized.shape[:2]
-    rect = (10, 10, width - 20, height - 20)
+    
+    # Initialize mask and GrabCut models
     mask = np.zeros(image_resized.shape[:2], np.uint8)
     bgd_model = np.zeros((1, 65), np.float64)
     fgd_model = np.zeros((1, 65), np.float64)
+    
+    # Define a rectangle for the initial grab cut area
+    rect = (5, 5, width - 10, height - 10)
     cv2.grabCut(image_resized, mask, rect, bgd_model, fgd_model, 5, cv2.GC_INIT_WITH_RECT)
-    mask2 = np.where((mask == 2) | (mask == 0), 0, 1).astype("uint8")
-    return image_resized * mask2[:, :, np.newaxis]
+    
+    # Refine mask to isolate foreground (leaf area)
+    mask = np.where((mask == 2) | (mask == 0), 0, 1).astype("uint8")
+    
+    # Optional: further refine mask to remove small gaps or noise
+    kernel = np.ones((5, 5), np.uint8)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+    
+    # Apply mask to create a transparent background image (RGBA)
+    segmented_image = image_resized * mask[:, :, np.newaxis]
+    rgba_image = cv2.cvtColor(segmented_image, cv2.COLOR_BGR2BGRA)
+    rgba_image[:, :, 3] = mask * 255  # Set alpha channel based on mask
+    
+    return rgba_image
 
+# Apply segmentation and save the output with transparency
 for filename in os.listdir(output_folder):
     if filename.lower().endswith(('.jpg', '.jpeg', '.png')):
         image_path = os.path.join(output_folder, filename)
         image = cv2.imread(image_path)
-        segmented_image = segment_and_resize_image(image)
-        cv2.imwrite(image_path, segmented_image)
+        if image is not None:
+            segmented_image = segment_and_resize_image(image)
+            # Save as PNG to preserve transparency
+            output_path = os.path.join(output_folder, f"{os.path.splitext(filename)[0]}.png")
+            cv2.imwrite(output_path, segmented_image)
+            print(f"Processed and saved: {output_path}")
 
 # Step 3: Feature extraction (HOG and HSV color histogram)
 def extract_hog_for_color_image(image):
