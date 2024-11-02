@@ -29,7 +29,7 @@ extensions = ['.jpg', '.jpeg', '.png', '.JPG', '.JPEG', '.PNG']
 for class_name, paths in class_paths.items():
     os.makedirs(paths['output'], exist_ok=True)
 
-    for i in range(1, 1000):  # 001-1000
+    for i in range(1, 1001):  # 001-1000
         # Generate the base filename with 4 digits
         base_filename = ""
         if class_name == "Normal Leaf":
