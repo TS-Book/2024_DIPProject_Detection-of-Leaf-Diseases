@@ -120,5 +120,6 @@ for filename in os.listdir(output_folder):
 
         # Predict and display the result
         prediction = model.predict(scaled_features)[0]
-        print(f"Image '{filename}' classified as: {class_labels[prediction]}")
+        disease_name = class_labels[prediction]  # Define disease_name here
+        print(f"Image '{filename}' classified as: {disease_name}")
         print(f"Suggestion: {suggestions[disease_name]}")
