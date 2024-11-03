@@ -8,8 +8,8 @@ from skimage.feature import hog
 test_folders = [
     r'D:\University\3\3_1\DIP\Mini project\Plant_Disease_Detection\Data\5_Test\01_Normal_Test',
     r'D:\University\3\3_1\DIP\Mini project\Plant_Disease_Detection\Data\5_Test\02_LeafSpot_Test',
-    r'D:\University\3\3_1\DIP\Mini project\Plant_Disease_Detection\Data\5_Test\03_Mosaic Virus_Test',
-    r'D:\University\3\3_1\DIP\Mini project\Plant_Disease_Detection\Data\5_Test\04_Powdery Mildew_Test'
+    r'D:\University\3\3_1\DIP\Mini project\Plant_Disease_Detection\Data\5_Test\03_MosaicVirus_Test',
+    r'D:\University\3\3_1\DIP\Mini project\Plant_Disease_Detection\Data\5_Test\04_PowderyMildew_Test'
 ]
 output_folder = r'D:\University\3\3_1\DIP\Mini project\Plant_Disease_Detection\Data\6_TestAll'
 os.makedirs(output_folder, exist_ok=True)
@@ -90,6 +90,14 @@ model = joblib.load(model_path)
 scaler = joblib.load(scaler_path)
 class_labels = ["Normal Leaf", "Leaf Spot", "Mosaic Virus", "Powdery Mildew"]
 
+# Suggestions for each disease
+suggestions = {
+    "Normal Leaf": "Plant is healthy. No action needed.",
+    "Leaf Spot": "Prune infected leaves, apply fungicides like mancozeb or copper-based solutions, and improve air circulation.",
+    "Mosaic Virus": "No cure available. Remove infected plants and control insect vectors to prevent spread.",
+    "Powdery Mildew": "Prune affected areas, apply fungicides such as sulfur or neem oil, and reduce humidity around the plant."
+}
+
 for filename in os.listdir(output_folder):
     if filename.lower().endswith(('.jpg', '.jpeg', '.png')):
         image_path = os.path.join(output_folder, filename)
@@ -113,3 +121,4 @@ for filename in os.listdir(output_folder):
         # Predict and display the result
         prediction = model.predict(scaled_features)[0]
         print(f"Image '{filename}' classified as: {class_labels[prediction]}")
+        print(f"Suggestion: {suggestions[disease_name]}")
