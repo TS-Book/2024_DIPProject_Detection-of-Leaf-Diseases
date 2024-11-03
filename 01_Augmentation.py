@@ -51,7 +51,7 @@ for input_folder, output_folder in folders:
     # คัดลอกรูปภาพต้นฉบับไปยัง output_folder
     for i, filename in enumerate(existing_images):
         image = cv2.imread(os.path.join(input_folder, filename))
-        new_filename = f"{os.path.basename(output_folder)}_{str(i + 1).zfill(3)}.jpg"  # ตั้งชื่อใหม่ให้เรียงตามลำดับ
+        new_filename = f"{os.path.basename(output_folder)}_{str(i + 1).zfill(4)}.jpg"  # ตั้งชื่อใหม่ให้เรียงตามลำดับ
         cv2.imwrite(os.path.join(output_folder, new_filename), image)
 
     # ทำ Augmentation จนกว่าจะได้รูปครบ 400 รูปใน output_folder
@@ -65,7 +65,7 @@ for input_folder, output_folder in folders:
                 break
 
             current_image_count += 1
-            new_filename = f"{os.path.basename(output_folder)}_{str(current_image_count).zfill(3)}.jpg"
+            new_filename = f"{os.path.basename(output_folder)}_{str(current_image_count).zfill(4)}.jpg"
             cv2.imwrite(os.path.join(output_folder, new_filename), augmented_image)
 
     print(f"Data Augmentation เสร็จสิ้นสำหรับ '{os.path.basename(input_folder)}' มีรูปภาพทั้งหมด 1000 รูปในโฟลเดอร์:", output_folder)
