@@ -21,14 +21,14 @@ def random_augment(image):
         image = cv2.flip(image, 1)  # Flip แนวนอน
 
     if random.choice([True, False]):
-        angle = random.choice([90, 180, 270])  # หมุนภาพด้วยมุมสุ่ม
+        angle = random.choice([90, 180, 270])  
         image_center = tuple(np.array(image.shape[1::-1]) / 2)
         rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)
         image = cv2.warpAffine(image, rot_mat, image.shape[1::-1], flags=cv2.INTER_LINEAR)
 
     if random.choice([True, False]):
-        alpha = random.uniform(0.8, 1.0)  # ลดช่วง alpha ให้เข้มงวดขึ้น
-        beta = random.randint(-10, 0)      # ลดช่วง beta ให้ลดความสว่าง
+        alpha = random.uniform(0.8, 1.0)  
+        beta = random.randint(-10, 0)     
         image = cv2.convertScaleAbs(image, alpha=alpha, beta=beta)
 
     if random.choice([True, False]):
