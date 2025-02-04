@@ -54,7 +54,7 @@ for input_folder, output_folder in folders:
         new_filename = f"{os.path.basename(output_folder)}_{str(i + 1).zfill(4)}.jpg"  # ตั้งชื่อใหม่ให้เรียงตามลำดับ
         cv2.imwrite(os.path.join(output_folder, new_filename), image)
 
-    # ทำ Augmentation จนกว่าจะได้รูปครบ 400 รูปใน output_folder
+    # ทำ Augmentation จนกว่าจะได้รูปครบ 1000 รูปใน output_folder
     current_image_count = len(existing_images)
     while current_image_count < 1000:
         for filename in existing_images:
